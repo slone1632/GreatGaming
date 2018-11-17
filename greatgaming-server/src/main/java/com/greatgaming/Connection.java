@@ -8,6 +8,7 @@ public class Connection implements Runnable {
 	protected DataHandler dataHandler;
 	protected ConnectionPool connectionPool;
 	protected ServerSocket socket;
+	protected static final String TERMINATE_CONNECTION = "KILL_CONN";
 	
 	public Connection(
 			DataHandler dataHandler,
@@ -18,46 +19,41 @@ public class Connection implements Runnable {
 		this.connectionPool = connectionPool;
 	}
 	
-	protected void handleInput(BufferedReader inFromClient,
-		DataOutputStream outToClient) throws IOException {
-		String clientInput = inFromClient.readLine();
-			
-		String handlerOutput = this.dataHandler.handleData(clientInput);
-		handlerOutput = handlerOutput + System.lineSeparator();
-	
-		outToClient.writeBytes(handlerOutput);
-	}
-	
 	@Override
-	public void run(){
-		Socket connectionSocket;
-		BufferedReader inFromClient;
-		DataOutputStream outToClient;
-		
-		try{
-			System.out.println("Opening dedicated connection for client");
-			connectionSocket = this.socket.accept();
-			inFromClient =
-				new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
-			outToClient = new DataOutputStream(connectionSocket.getOutputStream());
-		} catch (IOException ex) {
-			throw new RuntimeException();
-		}
-
-		while (true) {
+	public void run() {
+		boolean wait = true;
+		Socket connectionSocket = null;
+		while (wait) {
 			try {
-				System.out.println("Received input from client");
-				handleInput(inFromClient, outToClient);
-			} catch (Exception ex) {
-				System.out.println("Closing connection");
-				try {
-					this.socket.close();
-				} catch (IOException ex2) {
-					throw new RuntimeException();
-				}
-				this.connectionPool.connectionClosed(this);
-				break;
+				connectionSocket = this.socket.accept();
+				BufferedReader inFromClient =
+					new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
+				DataOutputStream outToClient = new DataOutputStream(connectionSocket.getOutputStream());
+				
+				String clientInput = inFromClient.readLine();
+					
+				String handlerOutput = this.dataHandler.handleData(clientInput);
+				handlerOutput = handlerOutput + System.lineSeparator();
+			
+				outToClient.writeBytes(handlerOutput);	
+
+				if (clientInput.equals("null")) {
+					wait = false;
+					System.out.println("NULL STUFF");
+				}				
+			} catch (IOException ex) {
+				System.out.println("ERROR");
+				wait = false;
 			}
 		}
+		System.out.println("Exited");
+		try {
+			connectionSocket.close();
+			this.socket.close();
+		} catch (IOException ex) {
+			System.out.println("Failed to close connection");
+		}
+		this.connectionPool.connectionClosed(this);
+		
 	}
 }

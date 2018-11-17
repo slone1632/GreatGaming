@@ -11,17 +11,13 @@ public class OpenNewConnectionHandler extends DataHandler {
 	}
 	@Override
 	public String handleData(String data){
-		if (port == null) {
-			System.out.println("Connection was closed");
-			return "Goodbye";
-		}
-		
 		try {
 			Integer port = this.connectionPool.startPersistentClientConnection(new ConsoleHandler());
 			
 			return port.toString();
 		} catch (IOException ex) {
-			throw new RuntimeException();
+			ex.printStackTrace(System.out);
+			return "";
 		}
 	}
 }

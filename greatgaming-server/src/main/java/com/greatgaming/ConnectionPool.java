@@ -20,17 +20,10 @@ public class ConnectionPool {
 		}
 	}
 	
-	public void startWelcomeConnection() throws IOException {
-		OpenNewConnectionHandler handler = new OpenNewConnectionHandler(this);
-		
-		ServerSocket socket = new ServerSocket(WELCOME_PORT);
-		Connection connection = new WelcomeConnection(handler, socket, this);
-		Thread thread = new Thread(connection);
-		thread.start();
-	}
-	
 	public Integer startPersistentClientConnection(DataHandler dataHandler) throws IOException {
 		Integer port = this.availabilePorts.pop();
+		
+		System.out.println("Spinning up a connection on port " + port.toString());
 		
 		ServerSocket socket = new ServerSocket(port);
 		Connection connection = new Connection(dataHandler, socket, this);
@@ -46,5 +39,6 @@ public class ConnectionPool {
 		Integer portInUse = this.portsInUse.get(connection);
 		this.portsInUse.remove(connection);
 		this.availabilePorts.push(portInUse);
+		System.out.println("Terminating connection on port " + portInUse.toString());
 	}
 }
