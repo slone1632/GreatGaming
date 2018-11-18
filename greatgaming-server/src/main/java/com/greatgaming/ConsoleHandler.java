@@ -8,6 +8,6 @@ public class ConsoleHandler extends DataHandler {
 	public String handleData(String data){
 		System.out.println("received: " + data);
 		
-		return data.toUpperCase();
+		return data;
 	}
 }

@@ -16,6 +16,6 @@ public class ConsoleHandlerTest extends TestCase {
     public void testConsoleHandlerTest() {
         ConsoleHandler handler = new ConsoleHandler();
 		String result = handler.handleData("test");
-		assert("TEST".equals(result));
+		assert("test".equals(result));
     }
 }
