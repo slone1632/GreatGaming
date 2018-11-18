@@ -29,18 +29,18 @@ public class Connection implements Runnable {
 				BufferedReader inFromClient =
 					new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
 				DataOutputStream outToClient = new DataOutputStream(connectionSocket.getOutputStream());
-				
+
 				String clientInput = inFromClient.readLine();
-					
+
 				String handlerOutput = this.dataHandler.handleData(clientInput);
 				handlerOutput = handlerOutput + System.lineSeparator();
-			
-				outToClient.writeBytes(handlerOutput);	
+
+				outToClient.writeBytes(handlerOutput);
 
 				if (clientInput.equals("null")) {
 					wait = false;
-					System.out.println("NULL STUFF");
-				}				
+					System.out.println("Client closed connection");
+				}
 			} catch (IOException ex) {
 				System.out.println("ERROR");
 				wait = false;

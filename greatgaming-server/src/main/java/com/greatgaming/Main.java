@@ -5,11 +5,11 @@ import java.net.*;
 
 public class Main {
 	public static void main(String[] args) throws Exception {
-		ConnectionPool pool = new ConnectionPool(2);
+		ConnectionFactory factory = new ConnectionFactory();
+		ConnectionPool pool = new ConnectionPool(2, factory);
 		
 		OpenNewConnectionHandler handler = new OpenNewConnectionHandler(pool);
-		ServerSocket socket = new ServerSocket(ConnectionPool.WELCOME_PORT);
-		Connection connection = new Connection(handler, socket, pool);
+		Connection connection = factory.build(handler, ConnectionPool.WELCOME_PORT, pool);
 		connection.run();
 		
 		while(true) {
