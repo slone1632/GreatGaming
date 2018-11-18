@@ -8,7 +8,7 @@ public class Connection implements Runnable {
 	protected DataHandler dataHandler;
 	protected ConnectionPool connectionPool;
 	protected ServerSocket socket;
-	protected static final String TERMINATE_CONNECTION = "KILL_CONN";
+	public static final String DISCONNECT_STRING = "TCENNOCSID";
 	
 	public Connection(
 			DataHandler dataHandler,
@@ -31,24 +31,27 @@ public class Connection implements Runnable {
 				DataOutputStream outToClient = new DataOutputStream(connectionSocket.getOutputStream());
 
 				String clientInput = inFromClient.readLine();
-
 				String handlerOutput = this.dataHandler.handleData(clientInput);
 				handlerOutput = handlerOutput + System.lineSeparator();
 
 				outToClient.writeBytes(handlerOutput);
 
-				if (clientInput.equals("null")) {
+				if (clientInput.contains(DISCONNECT_STRING)) {
 					wait = false;
 					System.out.println("Client closed connection");
 				}
+				connectionSocket.close();
 			} catch (IOException ex) {
 				System.out.println("ERROR");
 				wait = false;
+				System.out.println(ex.getMessage());
+				for (StackTraceElement line : ex.getStackTrace()) {
+					System.out.println(line.toString());
+				}
 			}
 		}
 		System.out.println("Exited");
 		try {
-			connectionSocket.close();
 			this.socket.close();
 		} catch (IOException ex) {
 			System.out.println("Failed to close connection");
