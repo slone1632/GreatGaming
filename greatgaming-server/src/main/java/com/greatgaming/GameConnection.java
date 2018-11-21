@@ -69,7 +69,8 @@ public class GameConnection implements Runnable {
 					this.outToClient.writeBytes(message + System.lineSeparator());
 					this.outToClient.flush();
 				}
-			} catch (IOException ex) {
+				Thread.sleep(10);
+			} catch (IOException | InterruptedException ex) {
 				Boolean wasAbleToReopenConnection = openSocket(3);
 				if (!wasAbleToReopenConnection) {
 					shouldKeepConnectionOpen = false;
