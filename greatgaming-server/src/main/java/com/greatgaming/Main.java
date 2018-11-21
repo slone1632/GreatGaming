@@ -8,8 +8,7 @@ public class Main {
 		ConnectionFactory factory = new ConnectionFactory();
 		ConnectionPool pool = new ConnectionPool(2, factory);
 		
-		OpenNewConnectionHandler handler = new OpenNewConnectionHandler(pool);
-		Connection connection = factory.build(handler, ConnectionPool.WELCOME_PORT, pool);
+		WelcomeConnection connection = factory.buildWelcomeConnection(pool);
 		connection.run();
 		
 		while(true) {

@@ -18,7 +18,7 @@ public class ConnectionPoolTest extends TestCase {
 
     public void testStartPersistentClientConnection() throws Exception {
         ConnectionFactory factory = mock(ConnectionFactory.class);
-        Connection conn = mock(Connection.class);
+        GameConnection conn = mock(GameConnection.class);
         when(factory.build(
                 any(DataHandler.class),
                 any(Integer.class),
@@ -37,7 +37,7 @@ public class ConnectionPoolTest extends TestCase {
 
     public void testConnectionClosed() throws Exception {
         ConnectionFactory factory = mock(ConnectionFactory.class);
-        Connection conn = new Connection(null, null, null);
+        GameConnection conn = new GameConnection(null, null, null);
         when(factory.build(
                 any(DataHandler.class),
                 any(Integer.class),

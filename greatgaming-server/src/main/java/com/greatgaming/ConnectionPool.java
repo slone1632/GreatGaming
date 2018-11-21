@@ -1,18 +1,17 @@
 package com.greatgaming;
 
 import java.io.*;
-import java.net.*;
 import java.util.*;
 
 public class ConnectionPool {
 	public static int WELCOME_PORT = 6789;
 	private ConnectionFactory connectionFactory;
 	private Stack<Integer> availabilePorts;
-	private Map<Connection, Integer> portsInUse;
+	private Map<GameConnection, Integer> portsInUse;
 	
 	public ConnectionPool(int maxClients, ConnectionFactory factory){
 		this.connectionFactory = factory;
-		this.portsInUse = new HashMap<Connection, Integer>();
+		this.portsInUse = new HashMap<GameConnection, Integer>();
 		this.availabilePorts = new Stack<Integer>();
 		
 		for (int i = 1; i < maxClients +1; i++) {
@@ -25,7 +24,7 @@ public class ConnectionPool {
 
 		System.out.println("Spinning up a connection on port " + port.toString());
 
-		Connection connection = this.connectionFactory.build(
+		GameConnection connection = this.connectionFactory.build(
 				dataHandler,
 				port,
 				this
@@ -36,8 +35,15 @@ public class ConnectionPool {
 
 		return port;
 	}
+
+	public void sendBroadcastMessage(String message) {
+		System.out.println("Broadcasting: " + message);
+		for (GameConnection gameConnection : this.portsInUse.keySet()) {
+			gameConnection.sendMessage(message);
+		}
+	}
 	
-	public void connectionClosed(Connection connection) {
+	public void connectionClosed(GameConnection connection) {
 		Integer portInUse = this.portsInUse.get(connection);
 		this.portsInUse.remove(connection);
 		this.availabilePorts.push(portInUse);
