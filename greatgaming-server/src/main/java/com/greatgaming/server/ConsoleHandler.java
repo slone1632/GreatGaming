@@ -1,7 +1,4 @@
-package com.greatgaming;
-
-import java.io.*;
-import java.net.*;
+package com.greatgaming.server;
 
 public class ConsoleHandler extends DataHandler {
 	@Override

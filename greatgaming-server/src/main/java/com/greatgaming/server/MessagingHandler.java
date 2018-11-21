@@ -1,4 +1,4 @@
-package com.greatgaming;
+package com.greatgaming.server;
 
 public class MessagingHandler extends DataHandler{
     public static final String HEARTBEAT_STRING = "HEARTBEAT";

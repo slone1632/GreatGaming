@@ -1,4 +1,4 @@
-package com.greatgaming;
+package com.greatgaming.server;
 
 import java.io.IOException;
 import java.net.ServerSocket;
