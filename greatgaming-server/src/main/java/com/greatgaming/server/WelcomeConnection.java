@@ -1,5 +1,10 @@
 package com.greatgaming.server;
 
+import com.greatgaming.comms.messages.Chat;
+import com.greatgaming.comms.messages.LoginRequest;
+import com.greatgaming.comms.messages.LoginResponse;
+import com.greatgaming.comms.serialization.Serializer;
+
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -9,10 +14,10 @@ import java.net.Socket;
 
 public class WelcomeConnection extends GameConnection {
     public WelcomeConnection(
-            DataHandler dataHandler,
             ServerSocket serverSocket,
-            ConnectionPool connectionPool) {
-        super(dataHandler, serverSocket, connectionPool);
+            ConnectionPool connectionPool,
+            Serializer serializer) {
+        super("", serverSocket, connectionPool, serializer);
     }
 
     public void run() {
@@ -25,16 +30,25 @@ public class WelcomeConnection extends GameConnection {
                 DataOutputStream outToClient = new DataOutputStream(connectionSocket.getOutputStream());
 
                 String clientInput = inFromClient.readLine();
-                String handlerOutput = this.dataHandler.handleData(clientInput);
-                handlerOutput = handlerOutput + System.lineSeparator();
+                Object message = this.serializer.deserialize(clientInput);
+                if (message instanceof LoginRequest) {
+                    LoginRequest request = (LoginRequest)message;
+                    Integer port = this.connectionPool.startPersistentClientConnection(request.username);
 
-                outToClient.writeBytes(handlerOutput);
 
-                if (clientInput.contains(DISCONNECT_STRING)) {
-                    wait = false;
-                    System.out.println("Client closed connection");
+                    Chat logoutNotification = new Chat();
+                    logoutNotification.message = request.username + " has joined the chat";
+                    connectionPool.sendBroadcastMessage(logoutNotification);
+
+                    LoginResponse response = new LoginResponse();
+                    response.gamePort = port;
+                    response.succeeded = true;
+
+                    String payload = this.serializer.serialize(LoginResponse.class, response);
+                    payload = payload + System.lineSeparator();
+
+                    outToClient.writeBytes(payload);
                 }
-                connectionSocket.close();
             } catch (IOException ex) {
                 System.out.println("ERROR");
                 wait = false;

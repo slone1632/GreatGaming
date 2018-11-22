@@ -11,5 +11,5 @@ mvn package
 
 # Running
 ```
-java -cp target/greatgaming-server-1.0-SNAPSHOT.jar com.greatgaming.server.Main
+java -cp target\greatgaming-server-1.0-SNAPSHOT-jar-with-dependencies.jar com.greatgaming.server.Main
 ```

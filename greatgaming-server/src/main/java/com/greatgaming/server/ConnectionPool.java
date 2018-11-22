@@ -1,5 +1,7 @@
 package com.greatgaming.server;
 
+import com.greatgaming.comms.messages.Chat;
+
 import java.io.*;
 import java.util.*;
 
@@ -19,13 +21,13 @@ public class ConnectionPool {
 		}
 	}
 	
-	public synchronized Integer startPersistentClientConnection(DataHandler dataHandler) throws IOException {
+	public synchronized Integer startPersistentClientConnection(String username) throws IOException {
 		Integer port = this.availabilePorts.pop();
 
 		System.out.println("Spinning up a connection on port " + port.toString());
 
 		GameConnection connection = this.connectionFactory.build(
-				dataHandler,
+				username,
 				port,
 				this
 		);
@@ -36,10 +38,10 @@ public class ConnectionPool {
 		return port;
 	}
 
-	public void sendBroadcastMessage(String message) {
-		System.out.println("Broadcasting: " + message);
+	public void sendBroadcastMessage(Chat chat) {
+		System.out.println("Broadcasting: " + chat);
 		for (GameConnection gameConnection : this.portsInUse.keySet()) {
-			gameConnection.sendMessage(message);
+			gameConnection.sendMessage(Chat.class, chat);
 		}
 	}
 	

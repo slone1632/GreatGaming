@@ -1,32 +1,44 @@
 package com.greatgaming.server;
 
+import com.greatgaming.comms.messages.*;
+import com.greatgaming.comms.serialization.Serializer;
+
 import java.io.*;
 import java.net.*;
 import java.util.LinkedList;
 import java.util.Queue;
 
 public class GameConnection implements Runnable {
-	protected DataHandler dataHandler;
 	protected ConnectionPool connectionPool;
 	protected ServerSocket server;
 	protected Socket serverSocket;
 	private BufferedReader inFromClient;
 	private DataOutputStream outToClient;
-	public static final String DISCONNECT_STRING = "TCENNOCSID";
-	private Queue<String> outputMessages;
+	protected Serializer serializer;
+	private Queue<MessageClassPair> outputMessages;
+	private String userName;
 	
 	public GameConnection(
-			DataHandler dataHandler,
+			String userName,
 			ServerSocket server,
-			ConnectionPool connectionPool) {
-		this.dataHandler = dataHandler;
+			ConnectionPool connectionPool,
+			Serializer serializer) {
+		this.userName = userName;
 		this.server = server;
 		this.connectionPool = connectionPool;
-		this.outputMessages= new LinkedList<String>();
+		this.outputMessages= new LinkedList<>();
+		this.serializer = serializer;
+	}
+	private class MessageClassPair{
+		public Class clazz;
+		public Object message;
 	}
 
-	public void sendMessage(String message) {
-		this.outputMessages.add(message);
+	public <T> void sendMessage(Class<T> clazz, Object message) {
+		MessageClassPair pair = new MessageClassPair();
+		pair.clazz = clazz;
+		pair.message = message;
+		this.outputMessages.add(pair);
 	}
 
 	private Boolean openSocket(int numRetries) {
@@ -53,20 +65,28 @@ public class GameConnection implements Runnable {
 			try {
 				if (this.inFromClient.ready()) {
 					String clientInput = this.inFromClient.readLine();
-					String handlerOutput = this.dataHandler.handleData(clientInput);
-					if (handlerOutput != null) {
-						this.outputMessages.add(handlerOutput);
-					}
-
-					if (clientInput.contains(DISCONNECT_STRING)) {
+					Object messge = this.serializer.deserialize(clientInput);
+					if (messge instanceof DisconnectRequest) {
 						shouldKeepConnectionOpen = false;
+						sendMessage(DisconnectResponse.class, new DisconnectResponse());
+						Chat logoutNotification = new Chat();
+						logoutNotification.message = userName + " has left the game";
+						connectionPool.sendBroadcastMessage(logoutNotification);
 						System.out.println("Client closed connection");
+					} else if (messge instanceof Chat) {
+						Chat chat = (Chat)messge;
+						chat.message = userName + ": " + chat.message;
+						connectionPool.sendBroadcastMessage(chat);
+					} else if (messge instanceof HeartbeatRequest) {
+						HeartbeatAcknowledge ack = new HeartbeatAcknowledge();
+						ack.isAlive = true;
+						sendMessage(HeartbeatAcknowledge.class, ack);
 					}
-
 				}
 				while  (this.outputMessages.peek() != null) {
-					String message = this.outputMessages.poll();
-					this.outToClient.writeBytes(message + System.lineSeparator());
+					MessageClassPair message = this.outputMessages.poll();
+					String payload = this.serializer.serialize(message.clazz, message.message);
+					this.outToClient.writeBytes(payload + System.lineSeparator());
 					this.outToClient.flush();
 				}
 				Thread.sleep(10);
